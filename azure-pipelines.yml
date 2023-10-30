@@ -1,0 +1,96 @@
+# ASP.NET Core (.NET Framework)
+# Build and test ASP.NET Core projects targeting the full .NET Framework.
+# Add steps that publish symbols, save build artifacts, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+
+trigger:
+- main
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+
+steps:
+# - task: UseDotNet@2
+#   inputs:
+#     packageType: sdk
+#     version: '6.x'
+
+
+- task: NuGetToolInstaller@1
+  inputs:
+    checkLatest: true
+
+- task: NuGetCommand@2
+  inputs:
+    restoreSolution: '$(solution)'
+    noCache: true
+    
+
+- task: DotNetCoreCLI@2
+  displayName: build
+  inputs:
+    command: 'build'
+    projects: '**/*.csproj'
+    arguments: '--configuration $(buildConfiguration)'
+
+# - task: DotNetCoreCLI@2
+#   inputs:
+#     command: restore
+#     feedsToUse: select
+- task: DotNetCoreCLI@2
+  displayName: Publish
+  inputs:
+    command: publish
+    publishWebProjects: True
+    arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+    # zipAfterPublish: false
+
+- task: PublishPipelineArtifact@1
+  inputs:
+    TargetPath: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'Buildapp-artifact'
+
+# - task: DotNetCoreCLI@2
+#   displayName: test
+#   inputs:
+#     command: 'test'
+#     projects: '**/webtest.csproj'
+#     arguments: '/p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=./MyCoverage'
+#     publishTestResults: true
+  
+# - task: PublishCodeCoverageResults@1
+#   displayName: 'Publish Code Coverage Results'
+#   inputs:
+#     codeCoverageTool: Cobertura
+#     summaryFileLocation: '(Build.SourceDirectory)/**/MyCoverage/Coverage.Cobertura.xml'
+# - task: SonarCloudPrepare@1
+#   inputs:
+#     SonarCloud: 'sonar'
+#     organization: 'harsha143'
+#     scannerMode: 'MSBuild'
+#     projectKey: 'harsha143'
+#     projectName: 'harsha'
+
+# - task: VSBuild@1
+#   inputs:
+#     solution: '$(solution)'
+#     msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
+#     platform: '$(buildPlatform)'
+#     configuration: '$(buildConfiguration)'
+
+
+
+
+# - task: SonarCloudAnalyze@1
+#   inputs:
+#     jdkversion: 'JAVA_HOME_17_X64'
+
+# - task: SonarCloudPublish@1
+#   inputs:
+#     pollingTimeoutSec: '300'
+
